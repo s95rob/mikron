@@ -1,20 +1,32 @@
 cmake_minimum_required(VERSION 3.16)
 
+# Project options
+
 set(BUILD_PLATFORM "bcm2835")
 
 
-project(mikron LANGUAGES ASM C)
-include("${CMAKE_SOURCE_DIR}/platform/${BUILD_PLATFORM}.cmake")
+# CMake setup
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-set(PLATFORM_SOURCE_DIR "${CMAKE_SOURCE_DIR}/platform/${BUILD_PLATFORM}")
+
+project(mikron LANGUAGES ASM C)
+
+# Platform-specific
+
+# Includes the correct platform configuration options (including toolchain)
+include(${BUILD_PLATFORM})
+
+set(PLATFORM_SOURCE_DIR "platform/${BUILD_PLATFORM}")
 file(GLOB_RECURSE PLATFORM_SRCS
-    "${PLATFORM_SOURCE_DIR}/startup.s"
-    "${PLATFORM_SOURCE_DIR}/drivers/*"
+    "${PLATFORM_SOURCE_DIR}/*.s"
+    "${PLATFORM_SOURCE_DIR}/*.c"
 )
 
+
 # Mikron
+
 file(GLOB_RECURSE MIKRON_SRCS
     "kernel/*"
 )
@@ -22,7 +34,7 @@ file(GLOB_RECURSE MIKRON_SRCS
 add_executable(${PROJECT_NAME} ${PLATFORM_SRCS} ${MIKRON_SRCS})
 target_include_directories(${PROJECT_NAME}
 PRIVATE
-    ${CMAKE_SOURCE_DIR}
+    "include"
 )
 target_link_libraries(${PROJECT_NAME}
 PRIVATE
@@ -30,5 +42,9 @@ PRIVATE
 )
 target_link_options(${PROJECT_NAME}
 PRIVATE
-    -T "${PLATFORM_SOURCE_DIR}/linker.ld" -nostdlib
+    -T "${CMAKE_SOURCE_DIR}/platform/${BUILD_PLATFORM}_linker.ld" -nostdlib
+)
+set_target_properties(${PROJECT_NAME}
+PROPERTIES
+    OUTPUT_NAME ${PROJECT_NAME}_${BUILD_PLATFORM}
 )

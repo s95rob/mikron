@@ -10,6 +10,7 @@ void serial_init(uint32_t baudrate);
 // Send a character over serial com
 void serial_putc(char c);
 
+// Send a zero-terminated string over serial com
 void serial_puts(const char* str);
 
 // Get a character from serial com

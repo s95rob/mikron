@@ -1,20 +1,17 @@
-#include "drivers/serial.h"
-#include "drivers/mmio.h"
-#include "platform/bcm2835/bcm2835_peripherals.h"
-#include "arch/arm/arm.h"
+// BCM2835 serial driver via UART0
 
-typedef enum {
-    UART_LINE_RECEIVE    = (1 << 4),
-    UART_LINE_TRANSMIT   = (1 << 5)
-} uart_line;
+#include "bcm2835_peripherals.h"
+#include "kernel/serial.h"
+#include "kernel/mmio.h"
+#include "arch/arm/armv6.h"
 
-// Wait until UART line is ready
-void uart_wfl(uart_line line) {
-    while (mmio_inl(UART0_FR) & line);
+// Wait for specific UART IRQ
+void uart_wait_irq(uint16_t irq) {
+    while (mmio_inl(UART0_FR) & irq);
 }
 
 void serial_init(uint32_t baudrate) {
-    // Initialize UART
+    // Initialize UART0
 
     // Bring UART0 offline while setting it up
     mmio_outl(UART0_CR, 0);
@@ -24,7 +21,7 @@ void serial_init(uint32_t baudrate) {
     arm_delay(150);
 
     // Disable pin 14 and 15, wait
-    mmio_outl(GPPUDCLK0, (1 << 14) | (1 << 15));
+    mmio_outl(GPPUDCLK0, BIT(14) | BIT(15));
     arm_delay(150);
 
     // Write changes to GPPUDCLK0 (by setting to 0)
@@ -34,6 +31,7 @@ void serial_init(uint32_t baudrate) {
     mmio_outl(UART0_ICR, 0x7ff);
 
     // Apply baudrate via integer and fractional baud rate registers
+    // TODO: enable hardware FPU, redo in floating point
     const uint32_t fx_scalar = 1000000;
 
     uint32_t divisor = (UART_CLOCK_FREQ * fx_scalar) / (16 * baudrate),
@@ -43,19 +41,29 @@ void serial_init(uint32_t baudrate) {
     mmio_outl(UART0_IBRD, ibrd);
     mmio_outl(UART0_FBRD, fbrd);
 
-    // Enable FIFO data transmission, no parity
-    mmio_outl(UART0_LCRH, (1 << 4) | (1 << 5) | (1 << 6));
+    // Enable FIFO data transmission, both channels, no parity
+    mmio_outl(UART0_LCRH, 
+        UART_IRQ_RX_BIT |
+        UART_IRQ_TX_BIT |
+        UART_IRQ_RX_TIMEOUT_BIT);
 
-    // Mask all interrupts
-	mmio_outl(UART0_IMSC, (1 << 1) | (1 << 4) | (1 << 5) | (1 << 6) |
-	                       (1 << 7) | (1 << 8) | (1 << 9) | (1 << 10));
+    // Mask incoming interrupts
+    uint32_t irqmask = UART_IRQ_CTS_BIT | 
+        UART_IRQ_RX_BIT | UART_IRQ_TX_BIT |
+        UART_IRQ_RX_TIMEOUT_BIT |
+        UART_IRQ_FRAME_ERR_BIT | 
+        UART_IRQ_PARITY_ERR_BIT | 
+        UART_IRQ_BREAK_ERR_BIT |
+        UART_IRQ_OVERRUN_ERR_BIT;
+
+	mmio_outl(UART0_IMSC, irqmask);
 
     // Bring UART0 back online, enable recieve and transmit lines
-    mmio_outl(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9));
+    mmio_outl(UART0_CR, BIT(0) | BIT(8) | BIT(9));
 }
 
 void serial_putc(char c) {
-    uart_wfl(UART_LINE_TRANSMIT);
+    uart_wait_irq(UART_IRQ_TX_BIT);
     mmio_outl(UART0_DR, c);
 }
 
@@ -65,6 +73,6 @@ void serial_puts(const char* str) {
 }
 
 uint8_t serial_getc() {
-    uart_wfl(UART_LINE_RECEIVE);
+    uart_wait_irq(UART_IRQ_RX_BIT);
     return mmio_inl(UART0_DR);
 }

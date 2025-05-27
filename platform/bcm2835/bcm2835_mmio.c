@@ -1,6 +1,6 @@
-#include "drivers/mmio.h"
-#include "platform/bcm2835/bcm2835_peripherals.h"
-#include "arch/arm/arm.h"
+#include "bcm2835_peripherals.h"
+#include "kernel/mmio.h"
+#include "arch/arm/armv6.h"
 
 void mmio_outb(uint32_t port, uint8_t value) {
     *(volatile uint8_t*)(MMIO_BASE + port) = value;

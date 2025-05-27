@@ -1,6 +1,7 @@
-// https://datasheets.raspberrypi.com/bcm2835/bcm2835-peripherals.pdf (pg. 5)
+// https://datasheets.raspberrypi.com/bcm2835/bcm2835-peripherals.pdf
 
 #pragma once
+#include "common.h"
 
 // Memory-mapped IO region base address
 #define MMIO_BASE       0x20000000
@@ -38,6 +39,21 @@
 #define UART0_TDR       (UART0_BASE + 0x8C)
 
 #define UART_CLOCK_FREQ 3000000
+
+// UART IRQ bits
+enum {
+    UART_IRQ_RI_BIT             = BIT(0),
+    UART_IRQ_CTS_BIT            = BIT(1),
+    UART_IRQ_DCD_BIT            = BIT(2),
+    UART_IRQ_DSR_BIT            = BIT(3),
+    UART_IRQ_RX_BIT             = BIT(4),
+    UART_IRQ_TX_BIT             = BIT(5),
+    UART_IRQ_RX_TIMEOUT_BIT     = BIT(6),
+    UART_IRQ_FRAME_ERR_BIT      = BIT(7),
+    UART_IRQ_PARITY_ERR_BIT     = BIT(8),
+    UART_IRQ_BREAK_ERR_BIT      = BIT(9),
+    UART_IRQ_OVERRUN_ERR_BIT    = BIT(10)
+}; 
 
 // Mailbox register addresses
 #define MBOX_BASE       0xB880
