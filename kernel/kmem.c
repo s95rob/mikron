@@ -1,5 +1,5 @@
 #include "kmem.h"
-
+#include "kutil.h"
 
 static size_t s_block_base = 0;
 static size_t s_block_offset = 0;
@@ -22,12 +22,12 @@ memblock kmem_block(size_t n) {
 }
 
 void* kmem_alloc(memblock* block, size_t size) {
-    // Force size alignment
-    size = (size + KMEM_ALIGN - 1) & ~(KMEM_ALIGN - 1);
+    // Force allocation size alignment
+    size = ALIGN(KMEM_ALIGN, size);
 
-    // Wrap around the block if we've exceeded block size
+    // Allocation will exceed block size, return nothing
     if (block->alloc_offset + size >= block->num_pages * KMEM_PAGE_SIZE)
-        block->alloc_offset = 0;
+        return NULL;
 
     void* alloc = (void*)(block->addr + block->alloc_offset);
     block->alloc_offset += size;
