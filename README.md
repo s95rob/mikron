@@ -4,7 +4,7 @@ Microkernel for ARM devices. Currently targetting `qemu-system-arm`'s `virt` boa
 
 ## Building
 
-1. Install CMake (version 3.16 or above), arm-none-eabi toolchain and qemu-system-arm:
+1. Install CMake (version 3.16 or above), build-essential and arm-none-eabi toolchain:
 
 ```sh
 sudo apt install cmake build-essential gcc-arm-none-eabi libnewlib-arm-none-eabi
