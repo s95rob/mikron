@@ -6,7 +6,7 @@ include(arm-none-eabi.toolchain)
 
 project(mikron LANGUAGES ASM C)
 
-add_subdirectory("thirdparty/dtc")
+include(thirdparty/dtc)
 
 add_subdirectory("kernel")
 add_subdirectory("boot")
