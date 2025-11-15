@@ -13,6 +13,6 @@ set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}g++)
 
 set(COMMON_COMPILER_FLAGS "-mcpu=${ARM_NONE_EABI_MCPU_FLAG}")
 set(CMAKE_ASM_FLAGS ${COMMON_COMPILER_FLAGS})
-set(CMAKE_C_FLAGS "${COMMON_COMPILER_FLAGS} -ffreestanding -nostdlib -Wall -Wextra -fno-builtin")
+set(CMAKE_C_FLAGS "${COMMON_COMPILER_FLAGS} -ffreestanding -nostdlib -Wall -Wextra -fno-builtin -lc")
 
 set(CMAKE_OBJCOPY ${TOOLCHAIN_PREFIX}objcopy)
