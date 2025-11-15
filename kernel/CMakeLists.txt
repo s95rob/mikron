@@ -1,9 +1,12 @@
 add_library(kernel STATIC
     "kmain.c"
     "kmem.c"
-    "fdt.c"
 )
-target_link_libraries(kernel
+target_include_directories(kernel
 PUBLIC
-    libc
+    "kernel"
+)
+target_link_libraries(kernel 
+PUBLIC
+    libfdt
 )

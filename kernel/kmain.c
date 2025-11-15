@@ -1,23 +1,35 @@
-#include "uart.h"
-#include "fdt.h"
+#include "kutil.h"
 #include "kmem.h"
+
+#include <libfdt.h>
 
 #include <memory.h>
 #include <string.h>
 
-void kmain(const fdt_header* fdt) {
-    uart_puts("Entering kmain...");
+static const char msg[] = "Hello world";
 
-    // kmem test
-    kmem_init(0x44000000);
+void kmain(const void* fdt) {
+    // FDT test: Find UART using FDT instead of hardcoding address
+    vu32* uart_base = (vu32*)0;
 
-    const char* msg = "Hello world";
-    const size_t msg_len = strlen(msg);
+    // Validate FDT header
+    if (fdt_check_header(fdt) == 0) {
+        // Find PL011 UART property offset
+        int uart_offset = fdt_node_offset_by_compatible(fdt, -1, "arm,pl011");
 
-    memblock block = kmem_block(1);
+        if (uart_offset > 0) {
+            // Get the base address from the reg property
+            int prop_len;
+            const fdt64_t* reg_prop = fdt_getprop(fdt, uart_offset, "reg", &prop_len);
 
-    char* str = kmem_alloc(&block, msg_len);
-    memcpy(str, msg, msg_len);
+            if (reg_prop != NULL) {
+                uart_base = (vu32*)fdt64_to_cpu(*reg_prop);
 
-    uart_puts(str);
+                // Transmit message over UART
+                for (u32 i = 0; i < strnlen(msg, sizeof(msg)); i++) {
+                    *uart_base = msg[i];
+                }
+            }
+        }
+    }
 }

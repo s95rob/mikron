@@ -2,11 +2,11 @@ add_executable(boot
     "startup.s"
 )
 target_link_options(boot
-PRIVATE
+PUBLIC
     "-T${CMAKE_CURRENT_SOURCE_DIR}/linker.ld"
 )
 target_link_libraries(boot 
-PRIVATE 
+PUBLIC 
     kernel
 )
 
